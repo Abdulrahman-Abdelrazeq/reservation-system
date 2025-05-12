@@ -5,6 +5,8 @@ use Illuminate\Support\ServiceProvider;
 
 return [
 
+    'per_page' => env('PER_PAGE', 6),
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -184,5 +186,7 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+
+    
 
 ];

@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Traits\Response;
+use App\Models\Reservation;
+use App\Models\ReservationStatus;
 
 class ReservationController extends Controller
 {
+    use Response;
+
     /**
      * Display a listing of the resource.
      */
@@ -34,7 +39,7 @@ class ReservationController extends Controller
             $query->latest();
         }
 
-        return response()->json($query->paginate(10)->appends($request->query()));
+        return $this->sendRes(true, 'Services retrieved successfully', $query->paginate(config('app.per_page'))->appends($request->query()));
     }
 
     public function store(Request $request)
@@ -49,7 +54,7 @@ class ReservationController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'This time slot is already reserved.'], 422);
+            return $this->sendRes(false, 'This time slot is already reserved.', null, null, 400);
         }
 
         $reservation = $request->user()->reservations()->create([
@@ -58,13 +63,13 @@ class ReservationController extends Controller
             'status_id' => ReservationStatus::PENDING,
         ]);
 
-        return response()->json($reservation->load('service', 'status'), 201);
+        return $this->sendRes(true, 'Reservation created successfully', $reservation->load('service', 'status'));
     }
 
     public function show(Reservation $reservation)
     {
         $this->authorize('view', $reservation);
-        return response()->json($reservation->load('service', 'status'));
+        return $this->sendRes(true, 'Reservation retrieved successfully', $reservation->load('service', 'status'));
     }
 
     public function update(Request $request, Reservation $reservation)
@@ -77,7 +82,7 @@ class ReservationController extends Controller
 
         $reservation->update($validated);
 
-        return response()->json($reservation->load('service', 'status'));
+        return $this->sendRes(true, 'Reservation status updated successfully', $reservation->load('service', 'status'));
     }
 
     public function cancel(Request $request, Reservation $reservation)
@@ -85,19 +90,19 @@ class ReservationController extends Controller
         $this->authorize('cancel', $reservation);
 
         if ($reservation->reservation_time < now()) {
-            return response()->json(['message' => 'You cannot cancel a past reservation.'], 400);
+            return $this->sendRes(false, 'Cannot cancel past reservation.', null, null, 400);
         }
 
         if ($reservation->status_id == ReservationStatus::CANCELLED) {
-            return response()->json(['message' => 'Already cancelled.'], 400);
+            return $this->sendRes(false, 'This reservation is already cancelled.', null, null, 400);
         }
 
         if ($reservation->status_id == ReservationStatus::CONFIRMED) {
-            return response()->json(['message' => 'Cannot cancel confirmed reservation.'], 400);
+            return $this->sendRes(false, 'Cannot cancel a confirmed reservation.', null, null, 400);
         }
 
         $reservation->update(['status_id' => ReservationStatus::CANCELLED]);
 
-        return response()->json(['message' => 'Reservation cancelled.']);
+        return $this->sendRes(true, 'Reservation cancelled.');
     }
 }

@@ -43,7 +43,7 @@ class ServiceController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // pagination 
-        $services = $query->paginate(10)->appends($request->query());
+        $services = $query->paginate(config('app.per_page'))->appends($request->query());
 
         return view('admin.services.index', compact('services'));
     }

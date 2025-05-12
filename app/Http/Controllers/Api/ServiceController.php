@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Service;
+use App\Traits\Response;
 
 class ServiceController extends Controller
 {
+    use Response;
+
     /**
      * Display a listing of the resource.
      */
@@ -25,6 +29,6 @@ class ServiceController extends Controller
             $query->orderBy($request->sort_by, $direction);
         }
 
-        return response()->json($query->paginate(10));
+        return $this->sendRes(true, 'Services retrieved successfully', $query->paginate(config('app.per_page')));
     }
 }

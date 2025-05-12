@@ -41,7 +41,7 @@ class ReservationController extends Controller
             $query->latest();
         }
 
-        $reservations = $query->paginate(10)->appends($request->query());
+        $reservations = $query->paginate(config('app.per_page'))->appends($request->query());
 
         return view('reservations.index', compact('reservations'));
     }
