@@ -14,21 +14,38 @@ class ReservationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $reservations = Auth::user()->reservations()->with('service', 'status')->latest()->paginate(10);
+        $query = Auth::user()
+        ->reservations()
+        ->with(['service', 'status', 'user'])
+        ->whereHas('service', function ($q) use ($request) {
+            if ($request->filled('search')) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            }
+        });
+
+        if ($request->filled('status')) {
+            $query->where('status_id', $request->status);
+        }
+
+        if ($request->filled('sort_by') && $request->filled('order')) {
+            if ($request->sort_by == 'service_name') {
+                $query->join('services', 'reservations.service_id', '=', 'services.id')
+                    ->orderBy('services.name', $request->order)
+                    ->select('reservations.*');
+            } else {
+                $query->orderBy($request->sort_by, $request->order);
+            }
+        } else {
+            $query->latest();
+        }
+
+        $reservations = $query->paginate(10)->appends($request->query());
+
         return view('reservations.index', compact('reservations'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $services = Service::where('available', true)->get();
-
-        return view('reservations.create', compact('services'));
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -60,10 +77,17 @@ class ReservationController extends Controller
            abort(403);
        }
 
-       // Optional: prevent canceling past reservations
-       if ($reservation->reservation_time < now()) {
+        //prevent canceling past reservations
+        if ($reservation->reservation_time < now()) {
            return back()->withErrors(['error' => 'You cannot cancel a past reservation.']);
-       }
+        }
+        if ($reservation->status_id == ReservationStatus::CANCELLED) {
+           return back()->withErrors(['error' => 'This reservation is already cancelled.']);
+        }
+        if ($reservation->status_id == ReservationStatus::CONFIRMED) {
+           return back()->withErrors(['error' => 'You cannot cancel a confirmed reservation.']);
+        }
+
 
        $reservation->status_id = ReservationStatus::CANCELLED;
        $reservation->save();

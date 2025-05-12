@@ -22,7 +22,6 @@ This is a simple Laravel-based service reservation system that allows users to b
 
     ```bash
     composer install
-    npm install && npm run build
     ```
 
 3. **Set up the environment**

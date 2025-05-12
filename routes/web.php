@@ -36,21 +36,23 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // User routes
     Route::resource('services', ServiceController::class);
 
     Route::prefix('reservations')->controller(ReservationController::class)->name('reservations.')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/create', 'create')->name('create');
         Route::post('/{service}', 'store')->name('store');
         Route::delete('/{reservation}', 'cancel')->name('cancel');
     });
 
+
+    // Admin routes
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::controller(AdminReservationController::class)->name('reservations.')->group(function () {
             Route::get('reservations', 'index')->name('index');
             Route::patch('reservations/{reservation}/status', 'updateStatus')->name('updateStatus');
         });
-
+        
         Route::resource('services', AdminServiceController::class);
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

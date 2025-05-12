@@ -10,7 +10,7 @@
         <div class="container">
             <h1 class="mb-4">Edit Service</h1>
 
-            <form action="{{ route('services.update', $service) }}" method="POST">
+            <form action="{{ route('admin.services.update', $service) }}" method="POST">
                 @csrf
                 @method('PUT')
 
@@ -38,7 +38,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Update</button>
-                <a href="{{ route('services.index') }}" class="btn btn-secondary">Back</a>
+                <a href="{{ route('admin.services.index') }}" class="btn btn-secondary">Back</a>
             </form>
         </div>
     </div>

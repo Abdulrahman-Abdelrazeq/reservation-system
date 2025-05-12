@@ -11,9 +11,35 @@ class ServiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $services = Service::where('available', true)->paginate(6);
+        $services = Service::where('available', true);
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+            $services->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', "%$keyword%")
+                  ->orWhere('description', 'like', "%$keyword%");
+            });
+        }
+
+        $allowedSortFields = ['name', 'price'];
+        $sortBy = $request->input('sort_by', 'name'); // default: name
+        $sortOrder = $request->input('sort_order', 'desc'); // asc or desc
+
+        if (!in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'name';
+        }
+
+        if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $services->orderBy($sortBy, $sortOrder);
+
+        // pagination
+        $services = $services->paginate(10)->appends($request->query());
+
         return view('services.index', compact('services'));
     }
 

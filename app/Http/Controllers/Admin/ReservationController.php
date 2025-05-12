@@ -11,9 +11,45 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
-        $reservations = Reservation::with('user', 'service')
-            ->orderBy('reservation_time', 'desc')
-            ->paginate(10);
+         $query = \App\Models\Reservation::with(['service', 'status', 'user']);
+
+        // البحث باسم الخدمة
+        if ($request->filled('search')) {
+            $query->whereHas('service', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // البحث باسم المستخدم
+        if ($request->filled('user')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->user . '%');
+            });
+        }
+
+        // فلترة بالحالة
+        if ($request->filled('status')) {
+            $query->where('status_id', $request->status);
+        }
+
+        // ترتيب حسب حقل
+        if ($request->filled('sort_by') && $request->filled('order')) {
+            if ($request->sort_by === 'service_name') {
+                $query->join('services', 'reservations.service_id', '=', 'services.id')
+                    ->orderBy('services.name', $request->order)
+                    ->select('reservations.*');
+            } elseif ($request->sort_by === 'user_name') {
+                $query->join('users', 'reservations.user_id', '=', 'users.id')
+                    ->orderBy('users.name', $request->order)
+                    ->select('reservations.*');
+            } else {
+                $query->orderBy($request->sort_by, $request->order);
+            }
+        } else {
+            $query->latest();
+        }
+        
+        $reservations = $query->paginate(10)->appends($request->query());
 
         $statuses = ReservationStatus::all();
 

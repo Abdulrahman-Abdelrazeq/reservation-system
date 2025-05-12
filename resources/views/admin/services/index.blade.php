@@ -17,7 +17,7 @@
             @endauth
 
             <!-- Filter & Sort Form -->
-            <form method="GET" action="{{ route('services.index') }}" class="row g-3 mb-4">
+            <form method="GET" action="{{ route('admin.services.index') }}" class="row g-3 mb-4">
                 <div class="col-md-4">
                     <input type="text" name="keyword" class="form-control" placeholder="Search by name or description" value="{{ request('keyword') }}">
                 </div>
@@ -33,8 +33,8 @@
         
                 <div class="col-md-2">
                     <select name="sort_order" class="form-select">
-                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Ascending</option>
                         <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Descending</option>
+                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Ascending</option>
                     </select>
                 </div>
         
@@ -47,7 +47,11 @@
                 </div>
         
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ route('admin.services.index') }}" class="btn btn-secondary w-100">Reset</a>
                 </div>
             </form>
 
@@ -79,8 +83,8 @@
                             </td>
                             <td>
                                 @if (Auth::user()->isAdmin())
-                                    <a href="{{ route('services.edit', $service) }}" class="btn btn-sm btn-warning">Edit</a>
-                                    <form action="{{ route('services.destroy', $service) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                    <a href="{{ route('admin.services.edit', $service) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    <form action="{{ route('admin.services.destroy', $service) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-danger">Delete</button>

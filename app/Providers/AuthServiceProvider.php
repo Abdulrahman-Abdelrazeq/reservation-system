@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Providers;
+use App\Models\Reservation;
 
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -13,7 +14,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        Reservation::class => \App\Policies\ReservationPolicy::class,
     ];
 
     /**

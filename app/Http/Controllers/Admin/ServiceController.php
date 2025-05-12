@@ -16,7 +16,6 @@ class ServiceController extends Controller
     {
         $query = Service::query();
 
-        // البحث بكلمة مفتاحية
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $query->where(function ($q) use ($keyword) {
@@ -29,7 +28,6 @@ class ServiceController extends Controller
             $query->where('available', $request->input('available'));
         }
 
-        // ترتيب البيانات
         $allowedSortFields = ['id', 'name', 'price', 'available'];
         $sortBy = $request->input('sort_by', 'id'); // default: id
         $sortOrder = $request->input('sort_order', 'desc'); // asc or desc
@@ -44,7 +42,7 @@ class ServiceController extends Controller
 
         $query->orderBy($sortBy, $sortOrder);
 
-        // pagination مع تمرير الفلاتر في الرابط
+        // pagination 
         $services = $query->paginate(10)->appends($request->query());
 
         return view('admin.services.index', compact('services'));
@@ -55,7 +53,7 @@ class ServiceController extends Controller
      */
     public function create()
     {
-        return view('services.create');
+        return view('admin.services.create');
     }
 
     /**
@@ -64,7 +62,7 @@ class ServiceController extends Controller
     public function store(ServiceRequest $request)
     {
         Service::create($request->validated());
-        return redirect()->route('services.index')->with('success', 'Service created successfully.');
+        return redirect()->route('admin.services.index')->with('success', 'Service created successfully.');
     }
 
 
@@ -73,7 +71,7 @@ class ServiceController extends Controller
      */
     public function show(Service $service)
     {
-        return view('services.show', compact('service'));
+        return view('admin.services.show', compact('service'));
     }
 
     /**
@@ -81,7 +79,7 @@ class ServiceController extends Controller
      */
     public function edit(Service $service)
     {
-        return view('services.edit', compact('service'));
+        return view('admin.services.edit', compact('service'));
     }
 
     /**
@@ -100,7 +98,7 @@ class ServiceController extends Controller
             $service->reservations()->update(['status_id' => $service->available ? 1 : 2]);
         }
 
-        return redirect()->route('services.index')->with('success', 'Service updated successfully.');
+        return redirect()->route('admin.services.index')->with('success', 'Service updated successfully.');
     }
 
     /**
@@ -109,6 +107,6 @@ class ServiceController extends Controller
     public function destroy(Service $service)
     {
         $service->delete();
-        return redirect()->route('services.index')->with('success', 'Service deleted successfully.');
+        return redirect()->route('admin.services.index')->with('success', 'Service deleted successfully.');
     }
 }

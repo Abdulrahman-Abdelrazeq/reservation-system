@@ -10,9 +10,31 @@ class ReservationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Reservation::with('service', 'user', 'status')->latest()->paginate(10));
+        $query = $request->user()
+            ->reservations()
+            ->with(['service', 'status', 'user'])
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->whereHas('service', function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->search . '%');
+                });
+            })
+            ->when($request->filled('status'), fn($q) => $q->where('status_id', $request->status));
+
+        if ($request->filled('sort_by') && $request->filled('order')) {
+            if ($request->sort_by === 'service_name') {
+                $query->join('services', 'reservations.service_id', '=', 'services.id')
+                      ->orderBy('services.name', $request->order)
+                      ->select('reservations.*');
+            } else {
+                $query->orderBy($request->sort_by, $request->order);
+            }
+        } else {
+            $query->latest();
+        }
+
+        return response()->json($query->paginate(10)->appends($request->query()));
     }
 
     public function store(Request $request)
@@ -22,13 +44,26 @@ class ReservationController extends Controller
             'reservation_time' => 'required|date|after:now',
         ]);
 
-        $reservation = $request->user()->reservations()->create($validated);
+        $exists = Reservation::where('service_id', $validated['service_id'])
+            ->where('reservation_time', $validated['reservation_time'])
+            ->exists();
 
-        return response()->json($reservation, 201);
+        if ($exists) {
+            return response()->json(['message' => 'This time slot is already reserved.'], 422);
+        }
+
+        $reservation = $request->user()->reservations()->create([
+            'service_id' => $validated['service_id'],
+            'reservation_time' => $validated['reservation_time'],
+            'status_id' => ReservationStatus::PENDING,
+        ]);
+
+        return response()->json($reservation->load('service', 'status'), 201);
     }
 
     public function show(Reservation $reservation)
     {
+        $this->authorize('view', $reservation);
         return response()->json($reservation->load('service', 'status'));
     }
 
@@ -37,20 +72,32 @@ class ReservationController extends Controller
         $this->authorize('update', $reservation);
 
         $validated = $request->validate([
-            'status_id' => 'exists:reservation_statuses,id',
+            'status_id' => 'required|exists:reservation_statuses,id',
         ]);
 
         $reservation->update($validated);
 
-        return response()->json($reservation);
+        return response()->json($reservation->load('service', 'status'));
     }
 
-    public function destroy(Reservation $reservation)
+    public function cancel(Request $request, Reservation $reservation)
     {
-        $this->authorize('delete', $reservation);
+        $this->authorize('cancel', $reservation);
 
-        $reservation->delete();
+        if ($reservation->reservation_time < now()) {
+            return response()->json(['message' => 'You cannot cancel a past reservation.'], 400);
+        }
 
-        return response()->json(null, 204);
+        if ($reservation->status_id == ReservationStatus::CANCELLED) {
+            return response()->json(['message' => 'Already cancelled.'], 400);
+        }
+
+        if ($reservation->status_id == ReservationStatus::CONFIRMED) {
+            return response()->json(['message' => 'Cannot cancel confirmed reservation.'], 400);
+        }
+
+        $reservation->update(['status_id' => ReservationStatus::CANCELLED]);
+
+        return response()->json(['message' => 'Reservation cancelled.']);
     }
 }

@@ -19,4 +19,5 @@ use App\Http\Controllers\ReservationController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('services', [ServiceApiController::class, 'index']);
     Route::apiResource('reservations', ReservationController::class);
+    Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
 });

@@ -9,6 +9,35 @@
     <div class="py-12 bg-gray-100">
         <div class="container">
             <h1>Available Services</h1>
+
+            <form method="GET" action="{{ route('services.index') }}" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <input type="text" name="keyword" class="form-control" placeholder="Search by name or description" value="{{ request('keyword') }}">
+                </div>
+        
+                <div class="col-md-2">
+                    <select name="sort_by" class="form-select">
+                        <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
+                        <option value="price" {{ request('sort_by') == 'price' ? 'selected' : '' }}>Price</option>
+                    </select>
+                </div>
+        
+                <div class="col-md-2">
+                    <select name="sort_order" class="form-select">
+                        <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Descending</option>
+                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Ascending</option>
+                    </select>
+                </div>
+        
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ route('services.index') }}" class="btn btn-secondary w-100">Reset</a>
+                </div>
+            </form>
+
             <div class="row">
                 @foreach($services as $service)
                     <div class="col-md-4 mb-4">
