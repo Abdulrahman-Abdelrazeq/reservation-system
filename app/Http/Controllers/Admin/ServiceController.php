@@ -37,7 +37,7 @@ class ServiceController extends Controller
         }
 
         if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
-            $sortOrder = 'asc';
+            $sortOrder = 'desc';
         }
 
         $query->orderBy($sortBy, $sortOrder);

@@ -24,15 +24,15 @@ class ServiceController extends Controller
         }
 
         $allowedSortFields = ['name', 'price'];
-        $sortBy = $request->input('sort_by', 'name'); // default: name
+        $sortBy = $request->input('sort_by', 'id'); // default: id
         $sortOrder = $request->input('sort_order', 'desc'); // asc or desc
 
         if (!in_array($sortBy, $allowedSortFields)) {
-            $sortBy = 'name';
+            $sortBy = 'id';
         }
 
         if (!in_array(strtolower($sortOrder), ['asc', 'desc'])) {
-            $sortOrder = 'asc';
+            $sortOrder = 'desc';
         }
 
         $services->orderBy($sortBy, $sortOrder);

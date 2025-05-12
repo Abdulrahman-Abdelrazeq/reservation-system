@@ -11,7 +11,7 @@
             @auth
                 @if (Auth::user()->isAdmin())
                     <div class="mb-4">
-                        <a href="{{ route('services.create') }}" class="btn btn-success">Add New Service</a>
+                        <a href="{{ route('admin.services.create') }}" class="btn btn-success">Add New Service</a>
                     </div>
                 @endif
             @endauth
